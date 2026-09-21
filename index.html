@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLACKPINK Voting Assistant</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #fff5fb;
+  color: #30202f;
+  padding: 20px;
+  max-width: 600px;
+  margin: auto;
+}
+
+header {
+  background: #f4d9ee;
+  padding: 20px;
+  border-radius: 16px;
+}
+
+h1 {
+  font-size: 25px;
+}
+
+button, .link {
+  background: #8e347b;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  font-weight: bold;
+}
+
+input {
+  padding: 12px;
+  border: 1px solid #d8bfd3;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+form {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+form input {
+  flex: 1;
+  width: 50%;
+}
+
+.account {
+  background: white;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+
+.account span {
+  flex: 1;
+}
+
+.done span {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+#progress {
+  background: #eadce8;
+  height: 12px;
+  border-radius: 10px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+
+#bar {
+  background: #a33b8d;
+  height: 100%;
+  width: 0%;
+}
+
+.remove {
+  background: #ead7e7;
+  color: #40213b;
+  padding: 8px;
+}
+
+.note {
+  font-size: 12px;
+  color: #725b70;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>💗 BLACKPINK Voting Assistant</h1>
+  <p>Your personal voting checklist!</p>
+
+  <a class="link"
+     href="https://www.instagram.com/mtv/"
+     target="_blank">
+     Open MTV on Instagram ↗
+  </a>
+</header>
+
+<h3>🎀 Your Accounts</h3>
+
+<form id="form">
+  <input id="name"
+         placeholder="Account 1"
+         maxlength="60"
+         required>
+  <button type="submit">Add +</button>
+</form>
+
+<p id="count">0 / 0 completed</p>
+
+<div id="progress">
+  <div id="bar"></div>
+</div>
+
+<div id="accounts"></div>
+
+<button id="reset">Reset Round</button>
+
+<p class="note">
+Your checklist is saved in this browser on this device.
+Use account labels only. Never enter passwords.
+This tool tracks votes but does not submit them.
+</p>
+
+<script>
+const KEY = "bp-voting-checklist";
+
+let accounts = [];
+
+try {
+  accounts = JSON.parse(
+    localStorage.getItem(KEY) || "[]"
+  );
+} catch (e) {
+  accounts = [];
+}
+
+const container = document.getElementById("accounts");
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(accounts));
+  render();
+}
+
+function render() {
+  container.innerHTML = "";
+
+  accounts.forEach((account, index) => {
+    const row = document.createElement("div");
+
+    row.className = "account" +
+      (account.done ? " done" : "");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = account.done;
+
+    checkbox.onchange = () => {
+      accounts[index].done = checkbox.checked;
+      save();
+    };
+
+    const label = document.createElement("span");
+    label.textContent = account.name;
+
+    const remove = document.createElement("button");
+    remove.textContent = "✕";
+    remove.className = "remove";
+
+    remove.onclick = () => {
+      accounts.splice(index, 1);
+      save();
+    };
+
+    row.append(checkbox, label, remove);
+    container.appendChild(row);
+  });
+
+  const done = accounts.filter(a => a.done).length;
+
+  document.getElementById("count").textContent =
+    `${done} / ${accounts.length} completed`;
+
+  document.getElementById("bar").style.width =
+    (accounts.length
+      ? done / accounts.length * 100
+      : 0) + "%";
+}
+
+document.getElementById("form").onsubmit = e => {
+  e.preventDefault();
+
+  const input = document.getElementById("name");
+  const name = input.value.trim();
+
+  if (name) {
+    accounts.push({
+      name: name,
+      done: false
+    });
+
+    input.value = "";
+    save();
+  }
+};
+
+document.getElementById("reset").onclick = () => {
+  if (confirm("Reset all accounts for a new round?")) {
+    accounts.forEach(a => a.done = false);
+    save();
+  }
+};
+
+render();
+</script>
+
+</body>
+  </html>
